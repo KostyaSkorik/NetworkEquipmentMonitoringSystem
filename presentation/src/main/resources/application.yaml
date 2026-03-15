@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: presentation
+  datasource:
+    url: jdbc:postgresql://localhost:5430/net_metrics
+    username: admin
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
