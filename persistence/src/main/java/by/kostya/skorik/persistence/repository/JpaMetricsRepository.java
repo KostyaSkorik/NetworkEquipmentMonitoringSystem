@@ -18,4 +18,6 @@ public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> 
     Optional<MetricsEntity> findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(RouterEntity router,
                                                                                     String interfaceName);
 
+    Integer deleteByPollingTimeBefore(LocalDateTime pollingTimeBefore);
+
 }

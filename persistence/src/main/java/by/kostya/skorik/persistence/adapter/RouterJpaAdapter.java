@@ -35,4 +35,11 @@ public class RouterJpaAdapter implements RouterPort {
     public List<Router> findAllRouters() {
         return jpaRouterRepository.findAll().stream().map(routerMapper::entityToModel).toList();
     }
+
+    @Override
+    public Router findByIp(String ip) {
+        return jpaRouterRepository.findByIp(ip)
+                .map(routerMapper::entityToModel)
+                .orElseThrow(() -> new EntityNotFoundException("Router nor found with this ip"));
+    }
 }

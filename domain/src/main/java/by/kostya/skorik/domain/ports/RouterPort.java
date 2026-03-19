@@ -9,4 +9,5 @@ public interface RouterPort {
     boolean save(Router router);
     Router getRouterById(Long id);
     List<Router> findAllRouters();
+    Router findByIp(String ip);
 }

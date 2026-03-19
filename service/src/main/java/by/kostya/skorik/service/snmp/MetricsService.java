@@ -29,13 +29,14 @@ public class MetricsService {
     /*не забыть добавить важное уточнение, что просто так отправить 10.1.2.2 не получится
     необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
     */
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 30000)
     public void pollingInterface() throws IOException {
-        snmpPolling.start();
         List<Router> routers = routerPort.findAllRouters();
+        //TODO опрашивать устройства асинхронно
         for (Router router : routers) {
             List<TableEvent> tableEvents = snmpPolling.getMetricsTable("udp:%s/161".formatted(router.getIp()));
             List<Metrics> metrics = fillMetrics(tableEvents, router.getId());
+            //TODO сохранять разом с помощью saveAll()
             for (Metrics metric : metrics) {
                 metricsPort.save(metric);
             }
@@ -50,7 +51,9 @@ public class MetricsService {
             VariableBinding[] columns = event.getColumns();
 
             Optional<Metrics> lastMetricsOpt = metricsPort.getLastSavedMetrics(routerId, columns[0].toValueString());
-
+            if (columns[0].toValueString().equals("Null0")) {
+                continue;
+            }
             metrics.setPollingTime(LocalDateTime.now());
             metrics.setRouterId(routerId);
             metrics.setInterfaceName(columns[0].toValueString());
@@ -80,25 +83,38 @@ public class MetricsService {
 
     }
 
-    private Double outputUtilization(Double currentOutputSpeed, Double maxSpeed) {
-        return (currentOutputSpeed / maxSpeed) * 100.0;
-    }
-
     private Double inputUtilization(Double currentInputSpeed, Double maxSpeed) {
         return (currentInputSpeed / maxSpeed) * 100.0;
     }
 
+    private Double outputUtilization(Double currentOutputSpeed, Double maxSpeed) {
+        return (currentOutputSpeed / maxSpeed) * 100.0;
+    }
+
+    private Double inputBandwidth(Metrics currentMetrics, Metrics lastMetrics) {
+        long current = currentMetrics.getInputCounter();
+        long last = lastMetrics.getInputCounter();
+        return commonBandwidth(currentMetrics, lastMetrics, current, last);
+    }
+
     private Double outputBandwidth(Metrics currentMetrics, Metrics lastMetrics) {
-        long difCounter = currentMetrics.getOutputCounter() - lastMetrics.getOutputCounter();
+        long current = currentMetrics.getOutputCounter();
+        long last = lastMetrics.getOutputCounter();
+        return commonBandwidth(currentMetrics, lastMetrics, current, last);
+    }
+
+    private Double commonBandwidth(Metrics currentMetrics, Metrics lastMetrics, long current, long last) {
+        long difCounter;
+        if (current >= last) {
+            difCounter = current - last;
+        } else {
+            difCounter = (4294967296L - last) + current;
+        }
+
         double difTime = Duration.between(lastMetrics.getPollingTime(), currentMetrics.getPollingTime())
                                  .toMillis() / 1000.0;
         return (difCounter * 8) / difTime;
     }
 
-    private Double inputBandwidth(Metrics currentMetrics, Metrics lastMetrics) {
-        long difCounter = currentMetrics.getInputCounter() - lastMetrics.getInputCounter();
-        double difTime = Duration.between(lastMetrics.getPollingTime(), currentMetrics.getPollingTime())
-                                 .toMillis() / 1000.0;
-        return (difCounter * 8) / difTime;
-    }
+
 }
