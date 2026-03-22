@@ -2,12 +2,10 @@ package by.kostya.skorik.service.snmp;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import net.percederberg.mibble.Mib;
-import net.percederberg.mibble.MibLoader;
-import net.percederberg.mibble.MibLoaderException;
-import net.percederberg.mibble.MibValueSymbol;
+import net.percederberg.mibble.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snmp4j.smi.OID;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -58,6 +56,19 @@ public class MibStorageService {
             int lastDotIndex = currentOid.lastIndexOf('.');
             if (lastDotIndex == -1) break;
             currentOid = currentOid.substring(0, lastDotIndex);
+        }
+        return oid;
+    }
+    public String getOid(String name){
+        String oid = null;
+        for (Mib m : loader.getAllMibs()) {
+            MibSymbol s = m.getSymbol(name);
+            if(s instanceof MibValueSymbol){
+                oid = ((MibValueSymbol) s).getValue().toString();
+                if(((MibValueSymbol) s).isScalar()){
+                    oid = new OID(oid).append(0).toDottedString();
+                }
+            }
         }
         return oid;
     }

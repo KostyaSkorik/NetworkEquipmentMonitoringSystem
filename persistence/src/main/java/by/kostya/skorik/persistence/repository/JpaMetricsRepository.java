@@ -4,8 +4,6 @@ import by.kostya.skorik.persistence.entity.MetricsEntity;
 import by.kostya.skorik.persistence.entity.RouterEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +16,9 @@ public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> 
     Optional<MetricsEntity> findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(RouterEntity router,
                                                                                     String interfaceName);
 
-    Integer deleteByPollingTimeBefore(LocalDateTime pollingTimeBefore);
+    void deleteByPollingTimeBefore(LocalDateTime pollingTimeBefore);
 
+    @Query("SELECT m FROM MetricsEntity m WHERE date_trunc('second',m.pollingTime) = " +
+           "(SELECT date_trunc('second', max(m2.pollingTime)) FROM MetricsEntity m2) ")
+    List<MetricsEntity> findAllLastMetrics();
 }

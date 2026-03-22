@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface MetricsMapper {
 
+    @Mapping(target = "routerId", expression = "java(entity.getRouter().getId())")
     Metrics entityToModel(MetricsEntity entity);
 
     @Mapping(target = "id", ignore = true)

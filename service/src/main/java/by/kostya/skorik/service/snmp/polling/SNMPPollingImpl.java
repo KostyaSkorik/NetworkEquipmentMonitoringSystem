@@ -2,6 +2,7 @@ package by.kostya.skorik.service.snmp.polling;
 
 import jakarta.annotation.PreDestroy;
 import org.snmp4j.*;
+import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.*;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
@@ -43,16 +44,16 @@ public class SNMPPollingImpl implements SNMPPolling {
 //        return event.getResponse().get(0).getVariable().toString();
 //    }
 
-//    public ResponseEvent<Address> get(OID oid) throws IOException {
-//        PDU pdu = new PDU();
-//        pdu.addOID(new VariableBinding(oid));
-//        pdu.setType(PDU.GET);
-//        ResponseEvent<Address> event = snmp.send(pdu, getTarget());
-//        if (event != null) {
-//            return event;
-//        }
-//        throw new RuntimeException("GET timed out");
-//    }
+    public String get(OID oid, String ipAddress) throws IOException {
+        PDU pdu = new PDU();
+        pdu.addOID(new VariableBinding(oid));
+        pdu.setType(PDU.GET);
+        ResponseEvent<Address> event = snmp.send(pdu, getTarget(ipAddress));
+        if (event != null) {
+            return event.getResponse().get(0).getVariable().toString();
+        }
+        throw new RuntimeException("GET timed out");
+    }
 
     private Target<Address> getTarget(String ipAddress) {
         Address targetAddress = GenericAddress.parse(ipAddress);

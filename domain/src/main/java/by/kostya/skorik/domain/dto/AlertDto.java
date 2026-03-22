@@ -9,9 +9,13 @@ import java.util.Map;
 @Data
 @ToString
 public class AlertDto {
+    private LocalDateTime time;
     private String ipSource;
     private String routerName;
-    private TrapType trapType;
-    private LocalDateTime time;
+    private String trapType;
+    private String sysUpTime;
+    private String interfaceName;
+    private String message;
+
 //    private Map<String,String> otherInfo;
 }

@@ -51,4 +51,15 @@ public class MetricsJpaAdapter implements MetricsPort {
                 .findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(routerEntity,interfaceName)
                 .map(metricsMapper::entityToModel);
     }
+
+    @Override
+    public List<Metrics> getLastMetrics() {
+        return jpaMetricsRepository
+                .findAllLastMetrics()
+                .stream()
+                .map(metricsMapper::entityToModel)
+                .toList();
+    }
+
+
 }

@@ -1,5 +1,8 @@
 package by.kostya.skorik.service.snmp.polling;
 
+import org.snmp4j.event.ResponseEvent;
+import org.snmp4j.smi.Address;
+import org.snmp4j.smi.OID;
 import org.snmp4j.util.TableEvent;
 
 import java.io.IOException;
@@ -11,6 +14,8 @@ public interface SNMPPolling {
 
     void stop() throws IOException;
 
-    public List<TableEvent> getMetricsTable(String ipAddress);
+    List<TableEvent> getMetricsTable(String ipAddress);
+
+    String get(OID oid, String ipAddress) throws IOException;
 
 }
