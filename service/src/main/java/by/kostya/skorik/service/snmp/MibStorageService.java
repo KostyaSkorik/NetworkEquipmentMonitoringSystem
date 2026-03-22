@@ -1,11 +1,64 @@
 package by.kostya.skorik.service.snmp;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import net.percederberg.mibble.Mib;
+import net.percederberg.mibble.MibLoader;
+import net.percederberg.mibble.MibLoaderException;
+import net.percederberg.mibble.MibValueSymbol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
+@Slf4j
 public class MibStorageService {
+    MibLoader loader = new MibLoader();
+    Mib mib;
+    Logger logger = LoggerFactory.getLogger(MibStorageService.class);
 
-    public void loader(){
+    @PostConstruct
+    public void loader() {
+        String[] standardMibs = {
+                "SNMPv2-SMI",
+                "SNMPv2-MIB",
+                "SNMPv2-CONF",
+                "SNMPv2-TC",
+                "IF-MIB",
+                "IP-MIB",
+                "UDP-MIB",
+                "TCP-MIB",
+                "SNMP-FRAMEWORK-MIB",
+                "SNMPv2-TM",
+                "OSPF-MIB"
 
+        };
+        for (String mib : standardMibs) {
+            try {
+                loader.load(mib);
+            } catch (IOException | MibLoaderException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
+    public String getName(String oid) {
+        if (oid == null || oid.isEmpty()) return "unknown";
+        String currentOid = oid.startsWith(".") ? oid.substring(1) : oid;
+        while (currentOid.contains(".")) {
+            for (Mib m : loader.getAllMibs()) {
+                MibValueSymbol symbol = m.getSymbolByValue(currentOid);
+                if (symbol != null) {
+                    return symbol.getName();
+                }
+            }
+            int lastDotIndex = currentOid.lastIndexOf('.');
+            if (lastDotIndex == -1) break;
+            currentOid = currentOid.substring(0, lastDotIndex);
+        }
+        return oid;
     }
 }

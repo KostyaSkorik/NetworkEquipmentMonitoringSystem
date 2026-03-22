@@ -15,6 +15,13 @@
     <description>service</description>
 
 
+    <repositories>
+        <repository>
+            <id>mibble</id>
+            <url>https://www.mibble.org/maven</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>by.kostya.skorik</groupId>
@@ -30,6 +37,30 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>net.percederberg.mibble</groupId>
+            <artifactId>mibble-parser</artifactId>
+            <version>${mibble.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/mibble-parser-2.10.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>net.percederberg.mibble</groupId>
+            <artifactId>mibble-mibs</artifactId>
+            <version>${mibble.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/mibble-mibs-2.10.1.jar</systemPath>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>net.percederberg.mibble</groupId>-->
+<!--            <artifactId>mibble-mibs</artifactId>-->
+<!--            <version>${mibble.version}</version>-->
+<!--            <scope>system</scope>-->
+<!--            <systemPath>${project.basedir}/libs/mibble-mibs-2.10.2.jar</systemPath>-->
+<!--        </dependency>-->
+
     </dependencies>
     <build>
         <plugins>
