@@ -3,6 +3,7 @@ package by.kostya.skorik.service.snmp.trap;
 import by.kostya.skorik.domain.dto.AlertDto;
 import by.kostya.skorik.domain.model.Metrics;
 import by.kostya.skorik.domain.model.Router;
+import by.kostya.skorik.domain.ports.AlertPort;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
 import by.kostya.skorik.service.snmp.MibStorageService;
@@ -27,10 +28,11 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationService implements CommandResponder {
+public class AlertListeningService implements CommandResponder {
     private final RouterPort routerPort;
     private final MetricsPort metricsPort;
     private final SNMPPolling snmpPolling;
+    private final AlertPort alertPort;
     private TransportMapping<?> transport;
     private Snmp snmp;
     private final MibStorageService storageService;
@@ -54,7 +56,7 @@ public class NotificationService implements CommandResponder {
         AlertDto alertDto = new AlertDto();
 
 
-        String resolvedTrapType = "";
+        String resolvedTrapType;
 
         for (VariableBinding vb : pdu.getVariableBindings()) {
             String oid = vb.getOid().toString();
@@ -86,13 +88,14 @@ public class NotificationService implements CommandResponder {
         // TODO сохранение в бд и отправка в кафку
         if (alertDto.getTrapType() != null) {
             log.info("Отправка DTO: {}", alertDto);
+            alertPort.save(alertDto);
         }
     }
 
     @Scheduled(fixedRate = 30000)
     public void checkUtilization() throws IOException {
         List<Metrics> metricsList = metricsPort.getLastMetrics();
-        AlertDto alertDto = null;
+        AlertDto alertDto;
         for (Metrics metrics : metricsList) {
             Double inputUtilization = metrics.getInputUtilization();
             Double outputUtilization = metrics.getOutputUtilization();
@@ -114,6 +117,7 @@ public class NotificationService implements CommandResponder {
                 }
                 // TODO сохранение в бд и отправка в кафку
                 log.info("Отправка DTO: {}", alertDto);
+                alertPort.save(alertDto);
             }
         }
     }

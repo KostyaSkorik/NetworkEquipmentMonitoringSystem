@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Data
 @ToString
@@ -16,6 +15,4 @@ public class AlertDto {
     private String sysUpTime;
     private String interfaceName;
     private String message;
-
-//    private Map<String,String> otherInfo;
 }
