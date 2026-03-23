@@ -1,12 +1,11 @@
 package by.kostya.skorik.service.snmp.trap;
 
-import by.kostya.skorik.domain.dto.AlertDto;
+import by.kostya.skorik.domain.model.Alerts;
 import by.kostya.skorik.domain.model.Metrics;
 import by.kostya.skorik.domain.model.Router;
 import by.kostya.skorik.domain.ports.AlertPort;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
-import by.kostya.skorik.service.snmp.MibStorageService;
 import by.kostya.skorik.service.snmp.polling.SNMPPolling;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,7 @@ public class AlertListeningService implements CommandResponder {
     private final AlertPort alertPort;
     private TransportMapping<?> transport;
     private Snmp snmp;
-    private final MibStorageService storageService;
+    private final MibStorage storageService;
     private static final List<String> possibleTraps = List.of("linkDown", "linkUp");
 
     @EventListener(ApplicationReadyEvent.class)
@@ -53,7 +52,7 @@ public class AlertListeningService implements CommandResponder {
         PDU pdu = commandResponderEvent.getPDU();
         if (pdu == null) return;
 
-        AlertDto alertDto = new AlertDto();
+        Alerts alerts = new Alerts();
 
 
         String resolvedTrapType;
@@ -68,56 +67,57 @@ public class AlertListeningService implements CommandResponder {
                 if (!possibleTraps.contains(resolvedTrapType)) {
                     break;
                 }
-                alertDto.setTrapType(resolvedTrapType);
+                alerts.setTrapType(resolvedTrapType);
                 String ip = commandResponderEvent.getPeerAddress().toString().split("/")[0];
-                alertDto.setIpSource(ip);
-                alertDto.setRouterName(routerPort.findByIp(ip).getName());
-                alertDto.setTime(LocalDateTime.now());
+                alerts.setIpSource(ip);
+                alerts.setRouterName(routerPort.findByIp(ip).getName());
+                alerts.setTime(LocalDateTime.now());
             }
             if (entryName.equals("sysUpTime")) {
-                alertDto.setSysUpTime(value);
+                alerts.setSysUpTime(value);
             }
             if (entryName.equals("ifDescr")) {
-                alertDto.setInterfaceName(value);
+                alerts.setInterfaceName(value);
             }
-            if (oid.equals("1.3.6.1.4.1.9.2.2.1.1.20.3")) {
-                alertDto.setMessage(value);
+            if (oid.substring(0, oid.lastIndexOf(".")).equals("1.3.6.1.4.1.9.2.2.1.1.20")) {
+                alerts.setMessage(value);
             }
+            log.info("oid {} value {}", oid, value);
 
         }
-        // TODO сохранение в бд и отправка в кафку
-        if (alertDto.getTrapType() != null) {
-            log.info("Отправка DTO: {}", alertDto);
-            alertPort.save(alertDto);
+        // TODO отправка в кафку
+        if (alerts.getTrapType() != null) {
+            log.info("Отправка DTO: {}", alerts);
+            alertPort.save(alerts);
         }
     }
 
     @Scheduled(fixedRate = 30000)
     public void checkUtilization() throws IOException {
         List<Metrics> metricsList = metricsPort.getLastMetrics();
-        AlertDto alertDto;
+        Alerts alerts;
         for (Metrics metrics : metricsList) {
             Double inputUtilization = metrics.getInputUtilization();
             Double outputUtilization = metrics.getOutputUtilization();
             if (inputUtilization > 80 || outputUtilization > 80) {
-                alertDto = new AlertDto();
+                alerts = new Alerts();
                 Router router = routerPort.getRouterById(metrics.getRouterId());
                 String ip = "udp:" + router.getIp() + "/161";
-                alertDto.setTime(LocalDateTime.now());
-                alertDto.setIpSource(router.getIp());
-                alertDto.setRouterName(router.getName());
-                alertDto.setTrapType("port overload");
-                alertDto.setSysUpTime(snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip));
-                alertDto.setInterfaceName(metrics.getInterfaceName());
+                alerts.setTime(LocalDateTime.now());
+                alerts.setIpSource(router.getIp());
+                alerts.setRouterName(router.getName());
+                alerts.setTrapType("port overload");
+                alerts.setSysUpTime(snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip));
+                alerts.setInterfaceName(metrics.getInterfaceName());
                 if (inputUtilization > 80) {
-                    alertDto.setMessage("The port is overloaded. Input Utilization: " + inputUtilization);
+                    alerts.setMessage("The port is overloaded. Input Utilization: " + inputUtilization);
                 }
                 if (outputUtilization > 80) {
-                    alertDto.setMessage("The port is overloaded. Output Utilization: " + outputUtilization);
+                    alerts.setMessage("The port is overloaded. Output Utilization: " + outputUtilization);
                 }
-                // TODO сохранение в бд и отправка в кафку
-                log.info("Отправка DTO: {}", alertDto);
-                alertPort.save(alertDto);
+                // TODO отправка в кафку
+                log.info("Отправка DTO: {}", alerts);
+                alertPort.save(alerts);
             }
         }
     }

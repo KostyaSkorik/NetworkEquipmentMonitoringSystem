@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> {
 
-    List<MetricsEntity> getAllByPollingTimeBetween(LocalDateTime pollingTimeAfter, LocalDateTime pollingTimeBefore);
+    List<MetricsEntity> getAllByPollingTimeBetweenOrderByPollingTimeAsc(LocalDateTime pollingTimeAfter, LocalDateTime pollingTimeBefore);
 
     Optional<MetricsEntity> findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(RouterEntity router,
                                                                                     String interfaceName);
@@ -21,4 +21,8 @@ public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> 
     @Query("SELECT m FROM MetricsEntity m WHERE date_trunc('second',m.pollingTime) = " +
            "(SELECT date_trunc('second', max(m2.pollingTime)) FROM MetricsEntity m2) ")
     List<MetricsEntity> findAllLastMetrics();
+
+    List<MetricsEntity> getAllByPollingTimeBetweenAndRouterOrderByPollingTimeAsc(LocalDateTime pollingTimeAfter,
+                                                            LocalDateTime pollingTimeBefore,
+                                                            RouterEntity router);
 }

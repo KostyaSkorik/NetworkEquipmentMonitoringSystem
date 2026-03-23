@@ -10,4 +10,6 @@ public interface RouterPort {
     Router getRouterById(Long id);
     List<Router> findAllRouters();
     Router findByIp(String ip);
+    void updateRouter(Long id, Router router);
+    void deleteRouter(Long id);
 }

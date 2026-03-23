@@ -1,18 +1,16 @@
-package by.kostya.skorik.service.snmp;
+package by.kostya.skorik.service.snmp.polling;
 
 import by.kostya.skorik.domain.model.InterfaceStatus;
 import by.kostya.skorik.domain.model.Metrics;
 import by.kostya.skorik.domain.model.Router;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
-import by.kostya.skorik.service.snmp.polling.SNMPPolling;
 import lombok.RequiredArgsConstructor;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.util.TableEvent;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,7 +19,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class MetricsService {
+public class MetricsHandling {
     private final SNMPPolling snmpPolling;
     private final MetricsPort metricsPort;
     private final RouterPort routerPort;
@@ -30,7 +28,7 @@ public class MetricsService {
     необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
     */
     @Scheduled(fixedRate = 30000)
-    public void pollingInterface() throws IOException {
+    public void pollingInterface() {
         List<Router> routers = routerPort.findAllRouters();
         //TODO опрашивать устройства асинхронно
         for (Router router : routers) {
@@ -115,6 +113,4 @@ public class MetricsService {
                                  .toMillis() / 1000.0;
         return (difCounter * 8) / difTime;
     }
-
-
 }

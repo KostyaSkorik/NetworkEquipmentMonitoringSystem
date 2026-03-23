@@ -36,19 +36,31 @@ public class MetricsJpaAdapter implements MetricsPort {
     }
 
     @Override
-    public List<Metrics> getMetricsByTime(LocalDateTime end, LocalDateTime start) {
-        return jpaMetricsRepository.getAllByPollingTimeBetween(start,end)
+    public List<Metrics> getMetricsByTime(LocalDateTime start, LocalDateTime end) {
+        return jpaMetricsRepository.getAllByPollingTimeBetweenOrderByPollingTimeAsc(start, end)
                 .stream()
                 .map(metricsMapper::entityToModel).toList();
     }
 
     @Override
-    public Optional<Metrics> getLastSavedMetrics(Long routerId, String interfaceName){
+    public List<Metrics> getMetricsByTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
         RouterEntity routerEntity = jpaRouterRepository
                 .findById(routerId)
                 .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
         return jpaMetricsRepository
-                .findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(routerEntity,interfaceName)
+                .getAllByPollingTimeBetweenAndRouterOrderByPollingTimeAsc(start,end, routerEntity)
+                .stream()
+                .map(metricsMapper::entityToModel)
+                .toList();
+    }
+
+    @Override
+    public Optional<Metrics> getLastSavedMetrics(Long routerId, String interfaceName) {
+        RouterEntity routerEntity = jpaRouterRepository
+                .findById(routerId)
+                .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
+        return jpaMetricsRepository
+                .findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(routerEntity, interfaceName)
                 .map(metricsMapper::entityToModel);
     }
 

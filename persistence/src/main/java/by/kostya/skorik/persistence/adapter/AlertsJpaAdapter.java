@@ -1,6 +1,6 @@
 package by.kostya.skorik.persistence.adapter;
 
-import by.kostya.skorik.domain.dto.AlertDto;
+import by.kostya.skorik.domain.model.Alerts;
 import by.kostya.skorik.domain.ports.AlertPort;
 import by.kostya.skorik.persistence.entity.RouterEntity;
 import by.kostya.skorik.persistence.mapper.AlertMapper;
@@ -21,12 +21,12 @@ public class AlertsJpaAdapter implements AlertPort{
     private final AlertMapper alertMapper;
 
     @Override
-    public void save(AlertDto alertDto) {
-        jpaAlertsRepository.save(alertMapper.dtoToEntity(alertDto));
+    public void save(Alerts alerts) {
+        jpaAlertsRepository.save(alertMapper.dtoToEntity(alerts));
     }
 
     @Override
-    public List<AlertDto> getAlertsBetweenTime(LocalDateTime start, LocalDateTime end) {
+    public List<Alerts> getAlertsBetweenTime(LocalDateTime start, LocalDateTime end) {
         return jpaAlertsRepository
                 .getAllByTimeBetween(start,end)
                 .stream()
@@ -35,7 +35,7 @@ public class AlertsJpaAdapter implements AlertPort{
     }
 
     @Override
-    public List<AlertDto> getAlertsBetweenTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
+    public List<Alerts> getAlertsBetweenTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
         RouterEntity router = jpaRouterRepository
                 .findById(routerId)
                 .orElseThrow(()->new EntityNotFoundException("Router not found with this id"));

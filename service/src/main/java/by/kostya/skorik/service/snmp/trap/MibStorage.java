@@ -1,10 +1,8 @@
-package by.kostya.skorik.service.snmp;
+package by.kostya.skorik.service.snmp.trap;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.percederberg.mibble.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.snmp4j.smi.OID;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +10,8 @@ import java.io.IOException;
 
 @Service
 @Slf4j
-public class MibStorageService {
+public class MibStorage {
     MibLoader loader = new MibLoader();
-    Mib mib;
-    Logger logger = LoggerFactory.getLogger(MibStorageService.class);
 
     @PostConstruct
     public void loader() {
@@ -59,13 +55,14 @@ public class MibStorageService {
         }
         return oid;
     }
-    public String getOid(String name){
+
+    public String getOid(String name) {
         String oid = null;
         for (Mib m : loader.getAllMibs()) {
             MibSymbol s = m.getSymbol(name);
-            if(s instanceof MibValueSymbol){
+            if (s instanceof MibValueSymbol) {
                 oid = ((MibValueSymbol) s).getValue().toString();
-                if(((MibValueSymbol) s).isScalar()){
+                if (((MibValueSymbol) s).isScalar()) {
                     oid = new OID(oid).append(0).toDottedString();
                 }
             }

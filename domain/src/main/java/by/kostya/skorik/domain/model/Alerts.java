@@ -1,4 +1,4 @@
-package by.kostya.skorik.domain.dto;
+package by.kostya.skorik.domain.model;
 
 import lombok.Data;
 import lombok.ToString;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 @ToString
-public class AlertDto {
+public class Alerts {
     private LocalDateTime time;
     private String ipSource;
     private String routerName;
