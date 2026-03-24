@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController("api/metrics")
 @RequiredArgsConstructor
+//TODO описать методы и их работу в интерфейсе
 public class MetricsController {
     private final MetricsService metricsService;
 

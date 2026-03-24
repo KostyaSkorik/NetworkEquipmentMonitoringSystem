@@ -7,6 +7,7 @@ import by.kostya.skorik.domain.ports.AlertPort;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
 import by.kostya.skorik.service.snmp.polling.SNMPPolling;
+import by.kostya.skorik.service.snmp.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.snmp4j.*;
@@ -32,8 +33,10 @@ public class AlertListeningService implements CommandResponder {
     private final MetricsPort metricsPort;
     private final SNMPPolling snmpPolling;
     private final AlertPort alertPort;
+    private final NotificationService notificationService;
     private TransportMapping<?> transport;
     private Snmp snmp;
+    //TODO перевести в интерфейс
     private final MibStorage storageService;
     private static final List<String> possibleTraps = List.of("linkDown", "linkUp");
 
@@ -89,6 +92,7 @@ public class AlertListeningService implements CommandResponder {
         if (alerts.getTrapType() != null) {
             log.info("Отправка DTO: {}", alerts);
             alertPort.save(alerts);
+            notificationService.sendAlerts(alerts);
         }
     }
 
@@ -118,6 +122,7 @@ public class AlertListeningService implements CommandResponder {
                 // TODO отправка в кафку
                 log.info("Отправка DTO: {}", alerts);
                 alertPort.save(alerts);
+                notificationService.sendAlerts(alerts);
             }
         }
     }

@@ -1,8 +1,9 @@
-package by.kostya.skorik.service.snmp.service;
+package by.kostya.skorik.service.snmp.service.impl;
 
 import by.kostya.skorik.domain.dto.MetricsDto;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.service.snmp.mapper.MetricsDtoMapper;
+import by.kostya.skorik.service.snmp.service.MetricsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MetricsServiceImpl implements MetricsService{
+public class MetricsServiceImpl implements MetricsService {
     private final MetricsPort metricsPort;
     private final MetricsDtoMapper metricsDtoMapper;
 

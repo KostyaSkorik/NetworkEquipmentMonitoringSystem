@@ -11,3 +11,6 @@ spring:
     show-sql: true
 community:
   string: R3
+VK:
+  VK_TOKEN: ${VK_TOKEN}
+  GROUP_ID: ${GROUP_ID}

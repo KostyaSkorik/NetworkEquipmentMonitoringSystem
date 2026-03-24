@@ -1,6 +1,7 @@
 package by.kostya.skorik.presentation.controller;
 
 import by.kostya.skorik.domain.dto.RouterDto;
+import by.kostya.skorik.service.snmp.service.NotificationService;
 import by.kostya.skorik.service.snmp.service.RouterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import java.util.List;
 
 @RestController("api/router")
 @RequiredArgsConstructor
+//TODO описать методы и их работу в интерфейсе
 public class RouterController {
     private final RouterService routerService;
 

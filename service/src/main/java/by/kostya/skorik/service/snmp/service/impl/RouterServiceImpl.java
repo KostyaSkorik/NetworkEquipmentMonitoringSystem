@@ -1,8 +1,9 @@
-package by.kostya.skorik.service.snmp.service;
+package by.kostya.skorik.service.snmp.service.impl;
 
 import by.kostya.skorik.domain.dto.RouterDto;
 import by.kostya.skorik.domain.ports.RouterPort;
 import by.kostya.skorik.service.snmp.mapper.RouterDtoMapper;
+import by.kostya.skorik.service.snmp.service.RouterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
