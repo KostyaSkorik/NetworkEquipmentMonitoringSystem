@@ -10,10 +10,10 @@ import by.kostya.skorik.persistence.repository.JpaRouterRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Repository
@@ -48,7 +48,7 @@ public class MetricsJpaAdapter implements MetricsPort {
                 .findById(routerId)
                 .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
         return jpaMetricsRepository
-                .getAllByPollingTimeBetweenAndRouterOrderByPollingTimeAsc(start,end, routerEntity)
+                .getAllByPollingTimeBetweenAndRouterOrderByPollingTimeAsc(start, end, routerEntity)
                 .stream()
                 .map(metricsMapper::entityToModel)
                 .toList();
@@ -71,6 +71,25 @@ public class MetricsJpaAdapter implements MetricsPort {
                 .stream()
                 .map(metricsMapper::entityToModel)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void saveAll(List<Metrics> metrics) {
+        Map<Long, RouterEntity> routerCache = new HashMap<>();
+
+        List<MetricsEntity> metricsEntities = metrics.stream()
+                .map(metric -> {
+                    Long rId = metric.getRouterId();
+                    RouterEntity routerEntity = routerCache.computeIfAbsent(rId, id ->
+                            jpaRouterRepository.findById(id)
+                                    .orElseThrow(() -> new EntityNotFoundException("Router not found with this id")));
+                    MetricsEntity metricsEntity = metricsMapper.modelToEntity(metric);
+                    metricsEntity.setRouter(routerEntity);
+                    return metricsEntity;
+                }).toList();
+
+        jpaMetricsRepository.saveAll(metricsEntities);
     }
 
 

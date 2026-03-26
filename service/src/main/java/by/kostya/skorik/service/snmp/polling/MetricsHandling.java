@@ -5,7 +5,9 @@ import by.kostya.skorik.domain.model.Metrics;
 import by.kostya.skorik.domain.model.Router;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
+import by.kostya.skorik.service.snmp.exception.ErrorHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.util.TableEvent;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,13 +18,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MetricsHandling {
     private final SNMPPolling snmpPolling;
     private final MetricsPort metricsPort;
     private final RouterPort routerPort;
+    private final ErrorHandler errorHandler;
 
     /*не забыть добавить важное уточнение, что просто так отправить 10.1.2.2 не получится
     необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
@@ -30,16 +35,20 @@ public class MetricsHandling {
     @Scheduled(fixedRate = 30000)
     public void pollingInterface() {
         List<Router> routers = routerPort.findAllRouters();
-        //TODO опрашивать устройства асинхронно
         for (Router router : routers) {
-            List<TableEvent> tableEvents = snmpPolling.getMetricsTable("udp:%s/161".formatted(router.getIp()));
-            List<Metrics> metrics = fillMetrics(tableEvents, router.getId());
-            //TODO сохранять разом с помощью saveAll()
-            for (Metrics metric : metrics) {
-                metricsPort.save(metric);
-            }
+            log.info("ЗАПРОС НА РОУТЕР {} ПОШЕЛ TIME:{}", router.getName(), System.currentTimeMillis());
+            CompletableFuture<List<TableEvent>> tableEventsFuture = snmpPolling.getMetricsTable("udp:%s/161".formatted(router.getIp()));
+            tableEventsFuture
+                    .exceptionally(ex -> {
+                        errorHandler.alertHandler(ex,router);
+                        return null;
+                    })
+                    .thenApply(result -> fillMetrics(result, router.getId()))
+                    .thenAccept(metricsPort::saveAll);
+            log.info("ЗАПРОС НА РОУТЕР {} ОКОНЧЕН TIME:{}", router.getName(), System.currentTimeMillis());
         }
     }
+
 
     private List<Metrics> fillMetrics(List<TableEvent> events, Long routerId) {
         List<Metrics> metricsList = new ArrayList<>();

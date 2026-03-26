@@ -7,8 +7,6 @@ import by.kostya.skorik.domain.model.Alerts;
 import by.kostya.skorik.service.snmp.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +23,6 @@ import java.util.Random;
 @Slf4j
 public class NotificationImpl implements NotificationService {
 
-    private final Logger logger = LoggerFactory.getLogger(NotificationImpl.class);
     private final RestClient restClient;
 
     private static final String baseUrl = "https://api.vk.com/method/";
@@ -81,6 +78,6 @@ public class NotificationImpl implements NotificationService {
                 .header("Authorization", "Bearer " + VK_TOKEN)
                 .retrieve()
                 .toBodilessEntity();
-        logger.info("Response: {}", response.getStatusCode());
+        log.info("Response: {}", response.getStatusCode());
     }
 }

@@ -13,4 +13,5 @@ public interface MetricsPort {
     List<Metrics> getMetricsByTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId);
     Optional<Metrics> getLastSavedMetrics(Long routerId, String interfaceName);
     List<Metrics> getLastMetrics();
+    void saveAll(List<Metrics> metrics);
 }
