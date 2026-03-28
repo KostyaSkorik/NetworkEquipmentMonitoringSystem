@@ -57,16 +57,14 @@ public class NotificationImpl implements NotificationService {
     public void sendAlerts(Alerts alerts) {
         String message = alerts.toString();
         List<VkUser> userList = getMembers();
-
-        for(VkUser user: userList){
-            sendMessage(user.getId(),message);
+        log.info("Message pre send {}", message);
+        for (VkUser user : userList) {
+            sendMessage(user.getId(), message);
         }
-
-
     }
 
     @Async
-    public void sendMessage(Long vkUserId, String message){
+    public void sendMessage(Long vkUserId, String message) {
         Random random = new Random();
         String random_id = String.valueOf(random.nextInt());
 

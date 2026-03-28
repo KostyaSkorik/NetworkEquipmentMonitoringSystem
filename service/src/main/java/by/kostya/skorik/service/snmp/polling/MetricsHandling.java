@@ -6,6 +6,8 @@ import by.kostya.skorik.domain.model.Router;
 import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
 import by.kostya.skorik.service.snmp.exception.ErrorHandler;
+import by.kostya.skorik.service.snmp.service.CalculateMetrics;
+import by.kostya.skorik.service.snmp.trap.AlertListeningService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.snmp4j.smi.VariableBinding;
@@ -13,7 +15,6 @@ import org.snmp4j.util.TableEvent;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ public class MetricsHandling {
     private final MetricsPort metricsPort;
     private final RouterPort routerPort;
     private final ErrorHandler errorHandler;
+    private final CalculateMetrics calculateMetrics;
+    private final AlertListeningService alertListeningService;
 
     /*не забыть добавить важное уточнение, что просто так отправить 10.1.2.2 не получится
     необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
@@ -40,19 +43,22 @@ public class MetricsHandling {
             CompletableFuture<List<TableEvent>> tableEventsFuture = snmpPolling.getMetricsTable("udp:%s/161".formatted(router.getIp()));
             tableEventsFuture
                     .exceptionally(ex -> {
-                        errorHandler.alertHandler(ex,router);
+                        errorHandler.alertHandler(ex, router);
                         return null;
                     })
                     .thenApply(result -> fillMetrics(result, router.getId()))
-                    .thenAccept(metricsPort::saveAll);
+                    .thenApply(metrics -> {
+                        metricsPort.saveAll(metrics);
+                        return metrics;
+                    })
+                    .thenAccept(alertListeningService::checkUtilization);
             log.info("ЗАПРОС НА РОУТЕР {} ОКОНЧЕН TIME:{}", router.getName(), System.currentTimeMillis());
         }
     }
 
 
-    private List<Metrics> fillMetrics(List<TableEvent> events, Long routerId) {
+    public List<Metrics> fillMetrics(List<TableEvent> events, Long routerId) {
         List<Metrics> metricsList = new ArrayList<>();
-
         for (TableEvent event : events) {
             Metrics metrics = new Metrics();
             VariableBinding[] columns = event.getColumns();
@@ -69,12 +75,8 @@ public class MetricsHandling {
 
             if (lastMetricsOpt.isPresent()) {
                 Metrics lastMetrics = lastMetricsOpt.get();
-                metrics.setInputBandwidth(inputBandwidth(metrics, lastMetrics));
-                metrics.setOutputBandwidth(outputBandwidth(metrics, lastMetrics));
-
-                metrics.setInputUtilization(inputUtilization(metrics.getInputBandwidth(), Double.valueOf(columns[4].toValueString())));
-                metrics.setOutputUtilization(outputUtilization(metrics.getOutputBandwidth(), Double.valueOf(columns[4].toValueString())));
-
+                calculateMetrics.calculateBandwidth(metrics, lastMetrics);
+                calculateMetrics.calculateUtilization(metrics, Double.valueOf(columns[4].toValueString()));
             } else {
                 metrics.setInputBandwidth(0.0);
                 metrics.setOutputBandwidth(0.0);
@@ -87,39 +89,5 @@ public class MetricsHandling {
             metricsList.add(metrics);
         }
         return metricsList;
-
-    }
-
-    private Double inputUtilization(Double currentInputSpeed, Double maxSpeed) {
-        return (currentInputSpeed / maxSpeed) * 100.0;
-    }
-
-    private Double outputUtilization(Double currentOutputSpeed, Double maxSpeed) {
-        return (currentOutputSpeed / maxSpeed) * 100.0;
-    }
-
-    private Double inputBandwidth(Metrics currentMetrics, Metrics lastMetrics) {
-        long current = currentMetrics.getInputCounter();
-        long last = lastMetrics.getInputCounter();
-        return commonBandwidth(currentMetrics, lastMetrics, current, last);
-    }
-
-    private Double outputBandwidth(Metrics currentMetrics, Metrics lastMetrics) {
-        long current = currentMetrics.getOutputCounter();
-        long last = lastMetrics.getOutputCounter();
-        return commonBandwidth(currentMetrics, lastMetrics, current, last);
-    }
-
-    private Double commonBandwidth(Metrics currentMetrics, Metrics lastMetrics, long current, long last) {
-        long difCounter;
-        if (current >= last) {
-            difCounter = current - last;
-        } else {
-            difCounter = (4294967296L - last) + current;
-        }
-
-        double difTime = Duration.between(lastMetrics.getPollingTime(), currentMetrics.getPollingTime())
-                                 .toMillis() / 1000.0;
-        return (difCounter * 8) / difTime;
     }
 }

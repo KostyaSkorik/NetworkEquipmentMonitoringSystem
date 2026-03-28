@@ -4,7 +4,6 @@ import by.kostya.skorik.domain.model.Alerts;
 import by.kostya.skorik.domain.model.Metrics;
 import by.kostya.skorik.domain.model.Router;
 import by.kostya.skorik.domain.ports.AlertPort;
-import by.kostya.skorik.domain.ports.MetricsPort;
 import by.kostya.skorik.domain.ports.RouterPort;
 import by.kostya.skorik.service.snmp.polling.SNMPPolling;
 import by.kostya.skorik.service.snmp.service.NotificationService;
@@ -18,7 +17,6 @@ import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -30,7 +28,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AlertListeningService implements CommandResponder {
     private final RouterPort routerPort;
-    private final MetricsPort metricsPort;
     private final SNMPPolling snmpPolling;
     private final AlertPort alertPort;
     private final NotificationService notificationService;
@@ -39,6 +36,7 @@ public class AlertListeningService implements CommandResponder {
     //TODO перевести в интерфейс
     private final MibStorage storageService;
     private static final List<String> possibleTraps = List.of("linkDown", "linkUp");
+
 
     @EventListener(ApplicationReadyEvent.class)
     public void listen() throws IOException {
@@ -96,10 +94,9 @@ public class AlertListeningService implements CommandResponder {
         }
     }
 
-    @Scheduled(fixedRate = 30000)
-    public void checkUtilization() throws IOException {
-        List<Metrics> metricsList = metricsPort.getLastMetrics();
+    public void checkUtilization(List<Metrics> metricsList){
         Alerts alerts;
+        log.info("ПРОВЕРКА УТИЛИЗАЦИИ");
         for (Metrics metrics : metricsList) {
             Double inputUtilization = metrics.getInputUtilization();
             Double outputUtilization = metrics.getOutputUtilization();
@@ -111,7 +108,11 @@ public class AlertListeningService implements CommandResponder {
                 alerts.setIpSource(router.getIp());
                 alerts.setRouterName(router.getName());
                 alerts.setTrapType("port overload");
-                alerts.setSysUpTime(snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip));
+                try {
+                    alerts.setSysUpTime(snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip));
+                } catch (IOException e) {
+                    alerts.setSysUpTime("Can not set SysUpTime");
+                }
                 alerts.setInterfaceName(metrics.getInterfaceName());
                 if (inputUtilization > 80) {
                     alerts.setMessage("The port is overloaded. Input Utilization: " + inputUtilization);

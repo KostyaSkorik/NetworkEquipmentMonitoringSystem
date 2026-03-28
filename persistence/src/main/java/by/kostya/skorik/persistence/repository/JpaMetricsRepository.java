@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> {
+public interface JpaMetricsRepository extends JpaRepository<MetricsEntity, Long> {
 
     List<MetricsEntity> getAllByPollingTimeBetweenOrderByPollingTimeAsc(LocalDateTime pollingTimeAfter, LocalDateTime pollingTimeBefore);
 
@@ -18,11 +18,14 @@ public interface JpaMetricsRepository extends JpaRepository<MetricsEntity,Long> 
 
     void deleteByPollingTimeBefore(LocalDateTime pollingTimeBefore);
 
-    @Query("SELECT m FROM MetricsEntity m WHERE date_trunc('second',m.pollingTime) = " +
-           "(SELECT date_trunc('second', max(m2.pollingTime)) FROM MetricsEntity m2) ")
+    @Query(value = "SELECT * FROM metrics m " +
+                   "WHERE date_trunc('second', m.polling_time) BETWEEN " +
+                   "(SELECT date_trunc('second', max(polling_time)) FROM metrics) - INTERVAL '30 seconds' " +
+                   "AND (SELECT date_trunc('second', max(polling_time)) FROM metrics)",
+            nativeQuery = true)
     List<MetricsEntity> findAllLastMetrics();
 
     List<MetricsEntity> getAllByPollingTimeBetweenAndRouterOrderByPollingTimeAsc(LocalDateTime pollingTimeAfter,
-                                                            LocalDateTime pollingTimeBefore,
-                                                            RouterEntity router);
+                                                                                 LocalDateTime pollingTimeBefore,
+                                                                                 RouterEntity router);
 }

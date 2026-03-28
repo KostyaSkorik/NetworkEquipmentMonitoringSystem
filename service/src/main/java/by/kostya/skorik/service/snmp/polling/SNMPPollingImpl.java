@@ -68,7 +68,7 @@ public class SNMPPollingImpl implements SNMPPolling {
         target.setCommunity(new OctetString(communityString));
         target.setAddress(targetAddress);
         target.setRetries(2);
-        target.setTimeout(1500);
+        target.setTimeout(3000);
         target.setVersion(SnmpConstants.version2c);
         return target;
     }
