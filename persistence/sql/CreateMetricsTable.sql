@@ -16,6 +16,8 @@ CREATE TABLE metrics (
     input_utilization DOUBLE PRECISION,
     output_utilization DOUBLE PRECISION,
 
+    status varchar(255) not null,
+
     CONSTRAINT fk_metrics_router
         FOREIGN KEY (router_id)
         REFERENCES routers (id)

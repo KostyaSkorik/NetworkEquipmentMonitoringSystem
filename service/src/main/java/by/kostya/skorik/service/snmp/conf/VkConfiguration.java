@@ -3,25 +3,21 @@ package by.kostya.skorik.service.snmp.conf;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.client.RestClient;
 
 import java.util.concurrent.Executor;
 
 @Configuration
-public class ServiceConfiguration {
-
-    @Bean
-    public RestClient restClient(){
-        return RestClient.builder().build();
-    }
-
-    @Bean(name = "executor")
+public class VkConfiguration {
+    @Bean(name = "VkExecutor")
     public Executor executor(){
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(50);
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("SNMP-Async-");
+        executor.setThreadNamePrefix("VK-Notify-thread- ");
+
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
         executor.initialize();
         return executor;
     }

@@ -75,7 +75,7 @@ public class SNMPPollingImpl implements SNMPPolling {
 
 
     @Override
-    @Async("executor")
+    @Async("SnmpExecutor")
     public CompletableFuture<List<TableEvent>> getMetricsTable(String ipAddress) {
         log.info("Поток {} в методе getMetrics", Thread.currentThread().getName());
         // Создаем утилиту для работы с таблицами. GETBULK работает быстрее и эффективнее.
