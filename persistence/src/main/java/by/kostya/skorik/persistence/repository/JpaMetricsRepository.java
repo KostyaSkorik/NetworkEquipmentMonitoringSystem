@@ -7,21 +7,16 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface JpaMetricsRepository extends JpaRepository<MetricsEntity, Long> {
 
     List<MetricsEntity> getAllByPollingTimeBetweenOrderByPollingTimeAsc(LocalDateTime pollingTimeAfter, LocalDateTime pollingTimeBefore);
 
-    Optional<MetricsEntity> findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(RouterEntity router,
-                                                                                    String interfaceName);
-
     void deleteByPollingTimeBefore(LocalDateTime pollingTimeBefore);
 
-    @Query(value = "SELECT * FROM metrics m " +
-                   "WHERE date_trunc('second', m.polling_time) BETWEEN " +
-                   "(SELECT date_trunc('second', max(polling_time)) FROM metrics) - INTERVAL '30 seconds' " +
-                   "AND (SELECT date_trunc('second', max(polling_time)) FROM metrics)",
+    @Query(value = "SELECT DISTINCT ON (router_id, interface_name) * " +
+                   "FROM metrics " +
+                   "ORDER BY router_id, interface_name, polling_time DESC",
             nativeQuery = true)
     List<MetricsEntity> findAllLastMetrics();
 

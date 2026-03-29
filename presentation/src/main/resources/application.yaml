@@ -9,6 +9,10 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
 community:
   string: R3
 VK:

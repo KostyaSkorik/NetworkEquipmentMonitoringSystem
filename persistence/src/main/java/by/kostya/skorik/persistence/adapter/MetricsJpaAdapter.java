@@ -54,15 +54,17 @@ public class MetricsJpaAdapter implements MetricsPort {
                 .toList();
     }
 
-    @Override
-    public Optional<Metrics> getLastSavedMetrics(Long routerId, String interfaceName) {
-        RouterEntity routerEntity = jpaRouterRepository
-                .findById(routerId)
-                .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
-        return jpaMetricsRepository
-                .findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(routerEntity, interfaceName)
-                .map(metricsMapper::entityToModel);
-    }
+
+//    @Override
+//    public Optional<Metrics> getLastSavedMetrics(Long routerId, String interfaceName) {
+//        RouterEntity routerEntity = jpaRouterRepository
+//                .findById(routerId)
+//                .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
+//        return jpaMetricsRepository
+//                .findFirstByRouterAndInterfaceNameOrderByPollingTimeDesc(routerEntity, interfaceName)
+//                .map(metricsMapper::entityToModel);
+//    }
+
 
     @Override
     public List<Metrics> getLastMetrics() {

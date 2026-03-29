@@ -25,7 +25,7 @@ public class RouterController {
     }
 
     @PutMapping("/{id}")
-    public void updateRouter(@PathVariable("id") Long routerId, RouterDto newRouter) {
+    public void updateRouter(@PathVariable("id") Long routerId, @RequestBody RouterDto newRouter) {
         routerService.updateRouter(routerId, newRouter);
     }
 

@@ -54,8 +54,6 @@ public class AlertListeningService implements CommandResponder {
         if (pdu == null) return;
 
         Alerts alerts = new Alerts();
-
-
         String resolvedTrapType;
 
         for (VariableBinding vb : pdu.getVariableBindings()) {
@@ -94,37 +92,44 @@ public class AlertListeningService implements CommandResponder {
         }
     }
 
-    public void checkUtilization(List<Metrics> metricsList){
-        Alerts alerts;
-        log.info("ПРОВЕРКА УТИЛИЗАЦИИ");
+    public void checkUtilization(List<Metrics> metricsList, Router router) {
+        log.info("Start check utilization");
+        String sysUpTimeCache = null;
         for (Metrics metrics : metricsList) {
             Double inputUtilization = metrics.getInputUtilization();
             Double outputUtilization = metrics.getOutputUtilization();
             if (inputUtilization > 80 || outputUtilization > 80) {
-                alerts = new Alerts();
-                Router router = routerPort.getRouterById(metrics.getRouterId());
-                String ip = "udp:" + router.getIp() + "/161";
+                if (sysUpTimeCache == null) {
+                    sysUpTimeCache = getSysUpTime(router.getIp());
+                }
+                Alerts alerts = new Alerts();
                 alerts.setTime(LocalDateTime.now());
                 alerts.setIpSource(router.getIp());
                 alerts.setRouterName(router.getName());
                 alerts.setTrapType("port overload");
-                try {
-                    alerts.setSysUpTime(snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip));
-                } catch (IOException e) {
-                    alerts.setSysUpTime("Can not set SysUpTime");
-                }
+                alerts.setSysUpTime(sysUpTimeCache);
                 alerts.setInterfaceName(metrics.getInterfaceName());
-                if (inputUtilization > 80) {
-                    alerts.setMessage("The port is overloaded. Input Utilization: " + inputUtilization);
-                }
-                if (outputUtilization > 80) {
-                    alerts.setMessage("The port is overloaded. Output Utilization: " + outputUtilization);
-                }
+                StringBuilder message = new StringBuilder("The port is overloaded.");
+                if (inputUtilization > 80) message.append(" Input: ").append(inputUtilization).append("%");
+                if (outputUtilization > 80) message.append(" Output: ").append(outputUtilization).append("%");
+                alerts.setMessage(message.toString());
+
                 // TODO отправка в кафку
                 log.info("Отправка DTO: {}", alerts);
                 alertPort.save(alerts);
                 notificationService.sendAlerts(alerts);
             }
+        }
+        log.info("End check utilization");
+    }
+
+    public String getSysUpTime(String routerIp) {
+        String ip = "udp:" + routerIp + "/161";
+        try {
+            return snmpPolling.get(new OID(storageService.getOid("sysUpTime")), ip);
+        } catch (IOException e) {
+            log.error("Failed to fetch sysUpTime for router {}", routerIp);
+            return "Cannot set SysUpTime";
         }
     }
 }

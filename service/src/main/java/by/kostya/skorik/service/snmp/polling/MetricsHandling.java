@@ -16,10 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +31,14 @@ public class MetricsHandling {
     private final CalculateMetrics calculateMetrics;
     private final AlertListeningService alertListeningService;
 
+
     /*не забыть добавить важное уточнение, что просто так отправить 10.1.2.2 не получится
     необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
     */
     @Scheduled(fixedRate = 30000)
     public void pollingInterface() {
+        Map<String, Metrics> lastMetricsMap = new ConcurrentHashMap<>();
+        fillMap(lastMetricsMap);
         List<Router> routers = routerPort.findAllRouters();
         for (Router router : routers) {
             log.info("ЗАПРОС НА РОУТЕР {} ПОШЕЛ TIME:{}", router.getName(), System.currentTimeMillis());
@@ -46,24 +48,33 @@ public class MetricsHandling {
                         errorHandler.alertHandler(ex, router);
                         return null;
                     })
-                    .thenApply(result -> fillMetrics(result, router.getId()))
+                    .thenApply(result -> fillMetrics(result, router.getId(), lastMetricsMap))
                     .thenApply(metrics -> {
                         metricsPort.saveAll(metrics);
                         return metrics;
                     })
-                    .thenAccept(alertListeningService::checkUtilization);
-            log.info("ЗАПРОС НА РОУТЕР {} ОКОНЧЕН TIME:{}", router.getName(), System.currentTimeMillis());
+                    .thenAccept(metrics -> alertListeningService.checkUtilization(metrics,router))
+                    .thenRun(() -> log.info("ЗАПРОС НА РОУТЕР {} ОКОНЧЕН TIME:{}", router.getName(), System.currentTimeMillis()));
         }
     }
 
+    public void fillMap(Map<String, Metrics> lastMetricsMap) {
+        List<Metrics> lestMetrics = metricsPort.getLastMetrics();
+        for (Metrics metrics : lestMetrics) {
+            lastMetricsMap.putIfAbsent(metrics.getRouterId() + "." + metrics.getInterfaceName(), metrics);
+        }
+    }
 
-    public List<Metrics> fillMetrics(List<TableEvent> events, Long routerId) {
+    public List<Metrics> fillMetrics(List<TableEvent> events, Long routerId, Map<String, Metrics> lastMetricsMap) {
+        if (events == null) {
+            return Collections.emptyList();
+        }
         List<Metrics> metricsList = new ArrayList<>();
         for (TableEvent event : events) {
             Metrics metrics = new Metrics();
             VariableBinding[] columns = event.getColumns();
 
-            Optional<Metrics> lastMetricsOpt = metricsPort.getLastSavedMetrics(routerId, columns[0].toValueString());
+            Metrics lastMetrics = lastMetricsMap.get(routerId + "." + columns[0].toValueString());
             if (columns[0].toValueString().equals("Null0")) {
                 continue;
             }
@@ -73,8 +84,7 @@ public class MetricsHandling {
             metrics.setInputCounter(Long.valueOf(columns[1].toValueString()));
             metrics.setOutputCounter(Long.valueOf(columns[2].toValueString()));
 
-            if (lastMetricsOpt.isPresent()) {
-                Metrics lastMetrics = lastMetricsOpt.get();
+            if (lastMetrics != null) {
                 calculateMetrics.calculateBandwidth(metrics, lastMetrics);
                 calculateMetrics.calculateUtilization(metrics, Double.valueOf(columns[4].toValueString()));
             } else {
