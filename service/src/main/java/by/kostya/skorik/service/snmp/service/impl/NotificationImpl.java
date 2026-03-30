@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -18,11 +19,67 @@ public class NotificationImpl implements NotificationService {
 
     @Override
     public void sendAlerts(Alerts alerts) {
-        String message = alerts.toString();
+        String message = formatVkMessage(alerts);
         List<VkUser> userList = vkMethods.getMembers();
         log.info("Message pre send {}", message);
         for (VkUser user : userList) {
             vkMethods.sendMessage(user.getId(), message);
         }
+    }
+
+
+    private String formatVkMessage(Alerts alert) {
+        if (alert == null) {
+            return "⚠️ Получен пустой алерт.";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        // 1. Динамический заголовок в зависимости от типа события
+        String trapType = alert.getTrapType() != null ? alert.getTrapType() : "Unknown";
+        String headerIcon = "🚨"; // По умолчанию - красная мигалка (авария)
+        String headerText = "СЕТЕВОЙ ИНЦИДЕНТ";
+
+        if (trapType.equalsIgnoreCase("linkUp")) {
+            headerIcon = "✅";
+            headerText = "ВОССТАНОВЛЕНИЕ СЕТИ";
+        } else if (trapType.toLowerCase().contains("overload")) {
+            headerIcon = "⚠️";
+            headerText = "ПРЕДУПРЕЖДЕНИЕ О НАГРУЗКЕ";
+        }
+
+        // Добавляем заголовок
+        sb.append(headerIcon).append(" [").append(headerText).append("] ").append(headerIcon).append("\n\n");
+
+
+        // 2. Форматирование времени
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        String formattedTime = alert.getTime() != null ? alert.getTime().format(formatter) : "Неизвестно";
+        sb.append("🕒 Время: ").append(formattedTime).append("\n");
+
+        // 3. Информация об узле
+        String routerName = alert.getRouterName() != null ? alert.getRouterName() : "Неизвестный узел";
+        String ipSource = alert.getIpSource() != null ? alert.getIpSource() : "IP неизвестен";
+        sb.append("📍 Узел: ").append(routerName).append(" (").append(ipSource).append(")\n");
+
+        // 4. Интерфейс (добавляем только если он есть)
+        if (alert.getInterfaceName() != null && !alert.getInterfaceName().isEmpty()) {
+            sb.append("🔌 Интерфейс: ").append(alert.getInterfaceName()).append("\n");
+        }
+
+        // 5. Тип события
+        sb.append("⚙️ Событие: ").append(trapType).append("\n");
+
+        // 6. SysUpTime
+        if (alert.getSysUpTime() != null && !alert.getSysUpTime().isEmpty()) {
+            sb.append("⏱ SysUpTime: ").append(alert.getSysUpTime()).append("\n");
+        }
+
+        // 7. Сообщение (Детали)
+        if (alert.getMessage() != null && !alert.getMessage().isEmpty()) {
+            sb.append("\n💬 Детали:\n").append(alert.getMessage());
+        }
+
+        return sb.toString();
     }
 }
