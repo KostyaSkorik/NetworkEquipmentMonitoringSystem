@@ -12,7 +12,6 @@ import java.util.List;
 @RequestMapping("api/metrics")
 @RequiredArgsConstructor
 @RestController
-//TODO описать методы и их работу в интерфейсе
 public class MetricsController {
     private final MetricsService metricsService;
 

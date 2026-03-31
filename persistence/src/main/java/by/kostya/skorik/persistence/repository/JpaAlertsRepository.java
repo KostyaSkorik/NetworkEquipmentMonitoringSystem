@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface JpaAlertsRepository extends JpaRepository<AlertEntity, Long> {
     List<AlertEntity> getAllByTimeBetween(LocalDateTime timeAfter, LocalDateTime timeBefore);
-    List<AlertEntity> getAllByTimeBetweenAndRouterName(LocalDateTime timeAfter, LocalDateTime timeBefore, String routerName);
 
+    List<AlertEntity> getAllByTimeBetweenAndRouterName(LocalDateTime timeAfter, LocalDateTime timeBefore, String routerName);
 }

@@ -25,13 +25,6 @@ public class RouterJpaAdapter implements RouterPort {
     }
 
     @Override
-    public Router getRouterById(Long id) {
-        return jpaRouterRepository.findById(id)
-                .map(routerMapper::entityToModel)
-                .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
-    }
-
-    @Override
     public List<Router> findAllRouters() {
         return jpaRouterRepository.findAll().stream().map(routerMapper::entityToModel).toList();
     }
@@ -49,7 +42,7 @@ public class RouterJpaAdapter implements RouterPort {
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Router nor found with this ip"));
         RouterEntity newRouter = routerMapper.modelToEntity(router);
-        routerMapper.updateRouter(newRouter,routerEntity);
+        routerMapper.updateRouter(newRouter, routerEntity);
         jpaRouterRepository.save(routerEntity);
     }
 

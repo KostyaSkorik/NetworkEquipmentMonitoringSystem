@@ -9,7 +9,7 @@ import java.util.concurrent.Executor;
 @Configuration
 public class VkConfiguration {
     @Bean(name = "VkExecutor")
-    public Executor executor(){
+    public Executor executor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);

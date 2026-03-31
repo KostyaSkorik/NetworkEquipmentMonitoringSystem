@@ -45,11 +45,6 @@ public class SNMPPollingImpl implements SNMPPolling {
         if (transport != null) transport.close();
     }
 
-//    public String getAsString(OID oid) throws IOException {
-//        ResponseEvent<Address> event = get(oid);
-//        return event.getResponse().get(0).getVariable().toString();
-//    }
-
     public String get(OID oid, String ipAddress) throws IOException {
         PDU pdu = new PDU();
         pdu.addOID(new VariableBinding(oid));
@@ -94,7 +89,7 @@ public class SNMPPollingImpl implements SNMPPolling {
 
         List<TableEvent> tableEvents = tableUtils.getTable(target, columnOIDs, null, null);
         // Запрашиваем таблицу
-        if(tableEvents.get(0).getStatus()==-1){
+        if (tableEvents.get(0).getStatus() == -1) {
             return CompletableFuture.failedFuture(new RuntimeException("Router is unreachable"));
         }
         return CompletableFuture.completedFuture(tableEvents);

@@ -19,7 +19,7 @@ public class MetricsServiceImpl implements MetricsService {
     @Override
     public List<MetricsDto> getByTimeBetween(LocalDateTime start, LocalDateTime end) {
         return metricsPort
-                .getMetricsByTime(start,end)
+                .getMetricsByTime(start, end)
                 .stream()
                 .map(metricsDtoMapper::modelToDto)
                 .toList();
@@ -28,7 +28,7 @@ public class MetricsServiceImpl implements MetricsService {
     @Override
     public List<MetricsDto> getByTimeBetweenAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
         return metricsPort
-                .getMetricsByTimeAndRouterId(start,end,routerId)
+                .getMetricsByTimeAndRouterId(start, end, routerId)
                 .stream()
                 .map(metricsDtoMapper::modelToDto)
                 .toList();

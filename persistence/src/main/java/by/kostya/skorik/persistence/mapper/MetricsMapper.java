@@ -13,6 +13,6 @@ public interface MetricsMapper {
     Metrics entityToModel(MetricsEntity entity);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "router",ignore = true)
+    @Mapping(target = "router", ignore = true)
     MetricsEntity modelToEntity(Metrics model);
 }

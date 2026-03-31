@@ -15,7 +15,7 @@ public class DeleteOldMetricService {
 
     @Scheduled(cron = "0 */5 * * * *")
     @Transactional
-    public void delete(){
+    public void delete() {
         LocalDateTime deleteTime = LocalDateTime.now().minusMinutes(5);
         jpaMetricsRepository.deleteByPollingTimeBefore(deleteTime);
     }

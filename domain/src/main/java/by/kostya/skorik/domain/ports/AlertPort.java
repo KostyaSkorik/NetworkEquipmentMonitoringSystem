@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface AlertPort {
     void save(Alerts alerts);
+
     List<Alerts> getAlertsBetweenTime(LocalDateTime start, LocalDateTime end);
+
     List<Alerts> getAlertsBetweenTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId);
 }

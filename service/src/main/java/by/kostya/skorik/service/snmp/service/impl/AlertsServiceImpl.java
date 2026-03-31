@@ -15,10 +15,11 @@ import java.util.List;
 public class AlertsServiceImpl implements AlertsService {
     private final AlertPort alertPort;
     private final AlertsDtoMapper alertsDtoMapper;
+
     @Override
     public List<AlertsDto> getByTimeBetween(LocalDateTime start, LocalDateTime end) {
         return alertPort
-                .getAlertsBetweenTime(start,end)
+                .getAlertsBetweenTime(start, end)
                 .stream()
                 .map(alertsDtoMapper::modelToDto)
                 .toList();
@@ -27,7 +28,7 @@ public class AlertsServiceImpl implements AlertsService {
     @Override
     public List<AlertsDto> getByTimeBetweenAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
         return alertPort
-                .getAlertsBetweenTimeAndRouterId(start,end,routerId)
+                .getAlertsBetweenTimeAndRouterId(start, end, routerId)
                 .stream()
                 .map(alertsDtoMapper::modelToDto)
                 .toList();

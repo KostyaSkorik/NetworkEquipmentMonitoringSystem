@@ -15,7 +15,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class AlertsJpaAdapter implements AlertPort{
+public class AlertsJpaAdapter implements AlertPort {
     private final JpaAlertsRepository jpaAlertsRepository;
     private final JpaRouterRepository jpaRouterRepository;
     private final AlertMapper alertMapper;
@@ -28,7 +28,7 @@ public class AlertsJpaAdapter implements AlertPort{
     @Override
     public List<Alerts> getAlertsBetweenTime(LocalDateTime start, LocalDateTime end) {
         return jpaAlertsRepository
-                .getAllByTimeBetween(start,end)
+                .getAllByTimeBetween(start, end)
                 .stream()
                 .map(alertMapper::entityToDto)
                 .toList();
@@ -38,9 +38,9 @@ public class AlertsJpaAdapter implements AlertPort{
     public List<Alerts> getAlertsBetweenTimeAndRouterId(LocalDateTime start, LocalDateTime end, Long routerId) {
         RouterEntity router = jpaRouterRepository
                 .findById(routerId)
-                .orElseThrow(()->new EntityNotFoundException("Router not found with this id"));
+                .orElseThrow(() -> new EntityNotFoundException("Router not found with this id"));
         return jpaAlertsRepository
-                .getAllByTimeBetweenAndRouterName(start,end,router.getName())
+                .getAllByTimeBetweenAndRouterName(start, end, router.getName())
                 .stream()
                 .map(alertMapper::entityToDto)
                 .toList();

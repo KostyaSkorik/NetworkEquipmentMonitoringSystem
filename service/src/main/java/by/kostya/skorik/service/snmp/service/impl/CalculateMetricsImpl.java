@@ -44,6 +44,7 @@ public class CalculateMetricsImpl implements CalculateMetrics {
                                  .toMillis() / 1000.0;
         return (difCounter * 8) / difTime;
     }
+
     private Double inputUtilization(Double currentInputSpeed, Double maxSpeed) {
         return (currentInputSpeed / maxSpeed) * 100.0;
     }

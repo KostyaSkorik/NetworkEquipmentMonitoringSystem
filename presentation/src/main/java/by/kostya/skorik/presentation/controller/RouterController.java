@@ -10,7 +10,6 @@ import java.util.List;
 @RequestMapping("api/router")
 @RequiredArgsConstructor
 @RestController
-//TODO описать методы и их работу в интерфейсе
 public class RouterController {
     private final RouterService routerService;
 

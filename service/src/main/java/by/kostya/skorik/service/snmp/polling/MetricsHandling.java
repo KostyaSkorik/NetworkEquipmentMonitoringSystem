@@ -16,7 +16,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,15 +34,14 @@ public class MetricsHandling {
     private final CalculateMetrics calculateMetrics;
     private final AlertListeningService alertListeningService;
 
-
-    /*не забыть добавить важное уточнение, что просто так отправить 10.1.2.2 не получится
-    необходимо добавить sudo ip route add 10.0.0.0/8 via 192.168.56.10
-    */
     @Scheduled(fixedRate = 30000)
     public void pollingInterface() {
+        List<Router> routers = routerPort.findAllRouters();
+        if (routers.isEmpty()) {
+            return;
+        }
         Map<String, Metrics> lastMetricsMap = new ConcurrentHashMap<>();
         fillMap(lastMetricsMap);
-        List<Router> routers = routerPort.findAllRouters();
         for (Router router : routers) {
             log.info("ЗАПРОС НА РОУТЕР {} ПОШЕЛ TIME:{}", router.getName(), System.currentTimeMillis());
             CompletableFuture<List<TableEvent>> tableEventsFuture = snmpPolling.getMetricsTable("udp:%s/161".formatted(router.getIp()));
@@ -53,7 +55,7 @@ public class MetricsHandling {
                         metricsPort.saveAll(metrics);
                         return metrics;
                     })
-                    .thenAccept(metrics -> alertListeningService.checkUtilization(metrics,router))
+                    .thenAccept(metrics -> alertListeningService.checkUtilization(metrics, router))
                     .thenRun(() -> log.info("ЗАПРОС НА РОУТЕР {} ОКОНЧЕН TIME:{}", router.getName(), System.currentTimeMillis()));
         }
     }

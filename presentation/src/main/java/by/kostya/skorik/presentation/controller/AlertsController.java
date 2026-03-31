@@ -12,7 +12,6 @@ import java.util.List;
 @RequestMapping("api/alerts")
 @RequiredArgsConstructor
 @RestController
-//TODO описать методы и их работу в интерфейсе
 public class AlertsController {
     private final AlertsService alertsService;
 

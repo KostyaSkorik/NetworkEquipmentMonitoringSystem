@@ -17,7 +17,7 @@ public class ErrorHandlerImpl implements ErrorHandler {
     private final AlertPort alertPort;
 
     @Override
-    public void alertHandler(Throwable ex, Router router){
+    public void alertHandler(Throwable ex, Router router) {
         String message = "Роутер не доступен, возможно проблема с портом, который опрашивается " + ex.getMessage();
         Alerts alerts = new Alerts();
         alerts.setRouterName(router.getName());

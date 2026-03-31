@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class Members{
+public class Members {
     private int count;
     private List<VkUser> items;
 }

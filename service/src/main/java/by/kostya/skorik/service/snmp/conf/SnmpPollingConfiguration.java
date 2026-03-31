@@ -11,12 +11,12 @@ import java.util.concurrent.Executor;
 public class SnmpPollingConfiguration {
 
     @Bean
-    public RestClient restClient(){
+    public RestClient restClient() {
         return RestClient.builder().build();
     }
 
     @Bean(name = "SnmpExecutor")
-    public Executor executor(){
+    public Executor executor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(50);
