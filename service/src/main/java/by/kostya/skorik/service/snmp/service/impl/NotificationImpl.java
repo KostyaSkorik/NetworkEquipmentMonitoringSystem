@@ -35,9 +35,8 @@ public class NotificationImpl implements NotificationService {
 
         StringBuilder sb = new StringBuilder();
 
-        // 1. Динамический заголовок в зависимости от типа события
         String trapType = alert.getTrapType() != null ? alert.getTrapType() : "Unknown";
-        String headerIcon = "🚨"; // По умолчанию - красная мигалка (авария)
+        String headerIcon = "🚨";
         String headerText = "СЕТЕВОЙ ИНЦИДЕНТ";
 
         if (trapType.equalsIgnoreCase("linkUp")) {
@@ -47,35 +46,24 @@ public class NotificationImpl implements NotificationService {
             headerIcon = "⚠️";
             headerText = "ПРЕДУПРЕЖДЕНИЕ О НАГРУЗКЕ";
         }
-
-        // Добавляем заголовок
         sb.append(headerIcon).append(" [").append(headerText).append("] ").append(headerIcon).append("\n\n");
 
-
-        // 2. Форматирование времени
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         String formattedTime = alert.getTime() != null ? alert.getTime().format(formatter) : "Неизвестно";
         sb.append("🕒 Время: ").append(formattedTime).append("\n");
 
-        // 3. Информация об узле
         String routerName = alert.getRouterName() != null ? alert.getRouterName() : "Неизвестный узел";
         String ipSource = alert.getIpSource() != null ? alert.getIpSource() : "IP неизвестен";
         sb.append("📍 Узел: ").append(routerName).append(" (").append(ipSource).append(")\n");
 
-        // 4. Интерфейс (добавляем только если он есть)
         if (alert.getInterfaceName() != null && !alert.getInterfaceName().isEmpty()) {
             sb.append("🔌 Интерфейс: ").append(alert.getInterfaceName()).append("\n");
         }
-
-        // 5. Тип события
         sb.append("⚙️ Событие: ").append(trapType).append("\n");
-
-        // 6. SysUpTime
         if (alert.getSysUpTime() != null && !alert.getSysUpTime().isEmpty()) {
             sb.append("⏱ SysUpTime: ").append(alert.getSysUpTime()).append("\n");
         }
 
-        // 7. Сообщение (Детали)
         if (alert.getMessage() != null && !alert.getMessage().isEmpty()) {
             sb.append("\n💬 Детали:\n").append(alert.getMessage());
         }
