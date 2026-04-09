@@ -14,7 +14,7 @@ spring:
         jdbc:
           batch_size: 50
 community:
-  string: R3
+  string: skorik
 VK:
   VK_TOKEN: ${VK_TOKEN}
   GROUP_ID: ${GROUP_ID}
